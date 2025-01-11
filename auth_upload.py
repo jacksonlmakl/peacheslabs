@@ -82,6 +82,28 @@ def upload_file(user):
         conn.rollback()
         conn.close()
         return jsonify({"message": "Failed to upload file.", "error": str(e)}), 500
+@app.route('/files', methods=['GET'])
+@token_required
+def list_files(user):
+    """List all files uploaded by the authenticated user."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("""
+            SELECT id, file_name, file_type, uploaded_at
+            FROM files
+            WHERE user_id = %s
+            ORDER BY uploaded_at DESC
+        """, (user['id'],))
+        files = cursor.fetchall()
+        conn.close()
+        return jsonify({"files": files}), 200
+    except psycopg2.Error as db_error:
+        print(f"Database error: {db_error}")  # Log database error
+        return jsonify({"message": "Failed to retrieve files.", "error": str(db_error)}), 500
+    except Exception as e:
+        print(f"Unexpected error: {e}")  # Log unexpected errors
+        return jsonify({"message": "Failed to retrieve files.", "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002)
