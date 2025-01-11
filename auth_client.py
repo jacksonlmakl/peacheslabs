@@ -60,18 +60,15 @@ def main():
     client = APIClient(base_url)
 
     # Sample user details
-    email = "test@examdsaple.com"
-    username = "testufser2"
-    password = "password1232"
+    email = "test@test.com"
+    username = "test"
+    password = "pass123"
 
     # Step 1: Register a new user
     client.register_user(email, username, password)
 
     # Step 2: Log in to get a token
     token = client.login_user(username, password)
-    if not token:
-        print("Login failed. Exiting.")
-        return
 
     # Step 3: Access the protected endpoint with the token
     client.access_protected_endpoint()
