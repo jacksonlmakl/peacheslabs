@@ -11,8 +11,9 @@ app.secret_key = secrets.token_hex(32)
 DATABASE_FILE = "core.db"
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE_FILE)
+    conn = sqlite3.connect(DATABASE_FILE, timeout=60)  # Set timeout for acquiring a lock
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL;")  # Enable WAL mode
     return conn
 
 def create_tables():

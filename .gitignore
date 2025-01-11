@@ -2,3 +2,6 @@ env
 core.db
 auth.log
 db.log
+*.ipynb
+*.pyc
+*-checkpoint.py
