@@ -3,3 +3,4 @@ db-sqlite3
 sqlite-web
 PyJWT
 requests
+psycopg2
