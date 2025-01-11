@@ -8,7 +8,7 @@ import secrets
 from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app.secret_key = 'test'
 
 DATABASE_CONFIG = {
     "dbname": "account",        # Replace with your database name

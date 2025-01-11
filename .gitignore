@@ -5,3 +5,4 @@ db.log
 *.ipynb
 *.pyc
 *-checkpoint.py
+hello_world.txt
