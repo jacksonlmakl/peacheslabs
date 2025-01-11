@@ -7,7 +7,7 @@ from functools import wraps
 import secrets
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)  # Use a strong secret key
+app.secret_key = secrets.token_hex(32) 
 DATABASE_FILE = "core.db"
 
 def get_db_connection():
