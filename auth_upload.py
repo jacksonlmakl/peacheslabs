@@ -31,7 +31,7 @@ def initialize_database():
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS files (
+            CREATE TABLE IF NOT EXISTS FILES (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL,
                 file_name TEXT NOT NULL,
@@ -95,7 +95,7 @@ def upload_file(user):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO files (user_id, file_name, file_type, file_data)
+            INSERT INTO FILES (user_id, file_name, file_type, file_data)
             VALUES (%s, %s, %s, %s)
         """, (user['id'], file_name, file_type, psycopg2.Binary(file_data)))
         conn.commit()
@@ -114,7 +114,7 @@ def list_files(user):
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute("""
             SELECT id, file_name, file_type, uploaded_at
-            FROM files
+            FROM FILES
             WHERE user_id = %s
             ORDER BY uploaded_at DESC
         """, (user['id'],))
@@ -137,7 +137,7 @@ def delete_file(user, file_id):
 
         # Check if the file exists and belongs to the user
         cursor.execute("""
-            SELECT file_name FROM files WHERE id = %s AND user_id = %s
+            SELECT file_name FROM FILES WHERE id = %s AND user_id = %s
         """, (file_id, user['id']))
         file = cursor.fetchone()
 
@@ -146,7 +146,7 @@ def delete_file(user, file_id):
             return jsonify({"message": "File not found or you do not have permission to delete it."}), 404
 
         # Delete the file from the database
-        cursor.execute("DELETE FROM files WHERE id = %s", (file_id,))
+        cursor.execute("DELETE FROM FILES WHERE id = %s", (file_id,))
         conn.commit()
 
         # Optionally delete the file locally if saved
