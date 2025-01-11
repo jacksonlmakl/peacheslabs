@@ -1,3 +1,4 @@
 env
 core.db
 auth.log
+db.log
