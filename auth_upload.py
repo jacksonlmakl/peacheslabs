@@ -26,6 +26,29 @@ def get_db_connection():
     )
     return conn
 
+def initialize_database():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS files (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                file_name TEXT NOT NULL,
+                file_type TEXT NOT NULL,
+                file_data BYTEA NOT NULL,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.commit()
+        conn.close()
+        print("Database initialized successfully.")
+    except psycopg2.Error as e:
+        print(f"Failed to initialize database: {e}")
+        if conn:
+            conn.rollback()
+        conn.close()
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -106,4 +129,5 @@ def list_files(user):
         return jsonify({"message": "Failed to retrieve files.", "error": str(e)}), 500
 
 if __name__ == '__main__':
+    initialize_database()
     app.run(host="0.0.0.0", port=5002)
