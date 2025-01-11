@@ -4,3 +4,4 @@ sqlite-web
 PyJWT
 requests
 psycopg2
+dash
