@@ -8,5 +8,4 @@ app.log
 *.pyc
 *-checkpoint.py
 hello_world.txt
-backend
 downloaded_files
