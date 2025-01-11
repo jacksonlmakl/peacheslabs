@@ -3,6 +3,7 @@ uploads
 core.db
 auth.log
 db.log
+app.log
 *.ipynb
 *.pyc
 *-checkpoint.py

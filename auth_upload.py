@@ -127,7 +127,40 @@ def list_files(user):
     except Exception as e:
         print(f"Unexpected error: {e}")  # Log unexpected errors
         return jsonify({"message": "Failed to retrieve files.", "error": str(e)}), 500
+@app.route('/delete/<int:file_id>', methods=['DELETE'])
+@token_required
+def delete_file(user, file_id):
+    """Delete a file uploaded by the authenticated user."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+        # Check if the file exists and belongs to the user
+        cursor.execute("""
+            SELECT file_name FROM files WHERE id = %s AND user_id = %s
+        """, (file_id, user['id']))
+        file = cursor.fetchone()
+
+        if not file:
+            conn.close()
+            return jsonify({"message": "File not found or you do not have permission to delete it."}), 404
+
+        # Delete the file from the database
+        cursor.execute("DELETE FROM files WHERE id = %s", (file_id,))
+        conn.commit()
+
+        # Optionally delete the file locally if saved
+        local_file_path = os.path.join('uploads', file['file_name'])  # Adjust the path if needed
+        if os.path.exists(local_file_path):
+            os.remove(local_file_path)
+
+        conn.close()
+        return jsonify({"message": f"File '{file['file_name']}' deleted successfully!"}), 200
+    except Exception as e:
+        if conn:
+            conn.rollback()
+            conn.close()
+        return jsonify({"message": "Failed to delete the file.", "error": str(e)}), 500
 if __name__ == '__main__':
     initialize_database()
     app.run(host="0.0.0.0", port=5002)

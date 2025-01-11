@@ -1,8 +1,10 @@
+from flask import Flask
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_uploader as du
 import requests
 import os
+from dash.dependencies import ALL
 
 # Configure Dash app
 app = dash.Dash(__name__)
@@ -67,12 +69,13 @@ app.layout = html.Div(
             [
                 html.H2("Uploaded Files"),
                 html.Button("List Files", id="list-files-button", n_clicks=0),
-                html.Ul(id="files-list", style={"marginTop": "10px", "color": "brown"}),
+                html.Div(id="files-list", style={"marginTop": "10px", "color": "brown"}),
             ]
         ),
     ],
     style={"width": "60%", "margin": "auto"},
 )
+
 
 # Callback for registering a new user
 @app.callback(
@@ -93,6 +96,7 @@ def register_user(n_clicks, email, username, password):
             return f"Registration failed: {response.json().get('message', 'Unknown error')}."
     return ""
 
+
 # Callback for logging in
 @app.callback(
     Output("login-output", "children"),
@@ -112,6 +116,7 @@ def login_user(n_clicks, username, password):
         else:
             return f"Login failed: {response.json().get('message', 'Unknown error')}."
     return ""
+
 
 @du.callback(
     output=Output("upload-output", "children"),
@@ -142,34 +147,55 @@ def upload_file(file_paths):
     except Exception as e:
         return f"An error occurred during file upload: {str(e)}."
 
+
 @app.callback(
     Output("files-list", "children"),
-    Input("list-files-button", "n_clicks"),
+    [Input("list-files-button", "n_clicks"),
+     Input({"type": "delete-button", "index": ALL}, "n_clicks")],
+    prevent_initial_call=True,
 )
-def list_files(n_clicks):
+def list_or_delete_files(n_clicks_list, n_clicks_delete):
     global token
-    if n_clicks > 0:
-        if not token:
-            return [html.Li("Please log in to view files.")]
-        
-        url = f"{UPLOAD_URL}/files?token={token}"
+    ctx = dash.callback_context
+    if not token:
+        return [html.Li("Please log in to view or manage files.")]
+
+    # Detect which button was clicked
+    if ctx.triggered_id and isinstance(ctx.triggered_id, dict) and ctx.triggered_id["type"] == "delete-button":
+        file_id = ctx.triggered_id["index"]
+        url = f"{UPLOAD_URL}/delete/{file_id}?token={token}"
         try:
-            response = requests.get(url)
+            response = requests.delete(url)
             if response.status_code == 200:
-                files = response.json().get("files", [])
-                if not files:
-                    return [html.Li("No files uploaded yet.")]
-                return [
-                    html.Li(f"{file['file_name']} (Uploaded: {file['uploaded_at']})") 
-                    for file in files
-                ]
+                return [html.Li(f"File deleted successfully!")]
             else:
-                error_message = response.json().get("error", "Unknown error")
-                return [html.Li(f"Failed to retrieve files: {error_message}")]
+                return [html.Li(f"Failed to delete file: {response.json().get('message', 'Unknown error')}")]
         except Exception as e:
             return [html.Li(f"An error occurred: {str(e)}")]
-    return []
+
+    # List files
+    url = f"{UPLOAD_URL}/files?token={token}"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            files = response.json().get("files", [])
+            if not files:
+                return [html.Li("No files uploaded yet.")]
+            return [
+                html.Li(
+                    [
+                        f"{file['file_name']} (Uploaded: {file['uploaded_at']}) ",
+                        html.Button("Delete", id={"type": "delete-button", "index": file["id"]}),
+                    ]
+                )
+                for file in files
+            ]
+        else:
+            error_message = response.json().get("error", "Unknown error")
+            return [html.Li(f"Failed to retrieve files: {error_message}")]
+    except Exception as e:
+        return [html.Li(f"An error occurred: {str(e)}")]
 
 
 if __name__ == "__main__":
-    app.run_server(port="9000",debug=True)
+    app.run_server(port="9000", debug=True)
