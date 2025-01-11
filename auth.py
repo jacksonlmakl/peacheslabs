@@ -6,17 +6,15 @@ import datetime
 from functools import wraps
 import secrets
 from psycopg2.extras import RealDictCursor
+import json
 
 app = Flask(__name__)
 app.secret_key = 'test'
 
-DATABASE_CONFIG = {
-    "dbname": "account",        # Replace with your database name
-    "user": "postgres",        # Replace with your PostgreSQL username
-    "password": "admin", # Replace with your PostgreSQL password
-    "host": "localhost",       # Replace with your PostgreSQL host
-    "port": "5432"             # Replace with your PostgreSQL port (default is 5432)
-}
+# Load database configuration from db.json
+with open("db.json", "r") as file:
+    DATABASE_CONFIG = json.load(file)
+
 
 def get_db_connection():
     conn = psycopg2.connect(
