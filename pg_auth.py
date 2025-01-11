@@ -11,9 +11,9 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 
 DATABASE_CONFIG = {
-    "dbname": "coredb",        # Replace with your database name
+    "dbname": "account",        # Replace with your database name
     "user": "postgres",        # Replace with your PostgreSQL username
-    "password": "password123", # Replace with your PostgreSQL password
+    "password": "admin", # Replace with your PostgreSQL password
     "host": "localhost",       # Replace with your PostgreSQL host
     "port": "5432"             # Replace with your PostgreSQL port (default is 5432)
 }
@@ -88,7 +88,8 @@ def register():
     if not email or not username or not password:
         return jsonify({'message': 'All fields are required!'}), 400
 
-    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    # Hash the password and store it as a string
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     try:
         conn = get_db_connection()
@@ -105,6 +106,7 @@ def register():
         conn.close()
         return jsonify({'message': 'Email or username already exists!'}), 400
 
+
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -119,7 +121,8 @@ def login():
     cursor.execute("SELECT * FROM \"USER\" WHERE username = %s", (username,))
     user = cursor.fetchone()
 
-    if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash']):
+    # Compare the hashed password correctly
+    if user and bcrypt.checkpw(password.encode('utf-8'), user['password_hash'].encode('utf-8')):
         # Generate a new token
         token = jwt.encode({
             'user_id': user['id'],
@@ -141,6 +144,8 @@ def login():
     else:
         conn.close()
         return jsonify({'message': 'Invalid username or password!'}), 401
+
+
 
 @app.route('/protected', methods=['GET'])
 @token_required
