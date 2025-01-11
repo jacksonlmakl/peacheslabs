@@ -2,3 +2,4 @@ bcrypt
 db-sqlite3
 sqlite-web
 PyJWT
+requests
