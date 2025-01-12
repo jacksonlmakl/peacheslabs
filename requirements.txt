@@ -6,3 +6,4 @@ requests
 psycopg2-binary
 dash
 dash_uploader
+flask
