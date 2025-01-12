@@ -3,6 +3,6 @@ db-sqlite3
 sqlite-web
 PyJWT
 requests
-psycopg2
+psycopg2-binary
 dash
 dash_uploader
